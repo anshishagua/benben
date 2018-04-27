@@ -1,0 +1,29 @@
+package com.anshishagua.exceptions;
+
+/**
+ * User: lixiao
+ * Date: 2018/4/27
+ * Time: 上午10:02
+ */
+
+public class ServerException extends RuntimeException {
+    public ServerException() {
+        super();
+    }
+
+    public ServerException(String message) {
+        super(message);
+    }
+
+    public ServerException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ServerException(Throwable cause) {
+        super(cause);
+    }
+
+    public ServerException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+}

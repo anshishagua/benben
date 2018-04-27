@@ -1,14 +1,12 @@
 package com.anshishagua.server;
 
-import com.anshishagua.configuration.BeanInstanceRegistry;
 import com.anshishagua.configuration.ConfigurationRegistry;
-import com.anshishagua.configuration.InjectionMappingRegistry;
 import com.anshishagua.configuration.MybatisConfig;
 import com.anshishagua.configuration.ServerConfig;
 import com.anshishagua.configuration.ViewConfig;
-import com.anshishagua.controller.DispatcherServlet;
 import com.anshishagua.utils.PackageUtils;
-import org.eclipse.jetty.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User: lixiao
@@ -17,6 +15,8 @@ import org.eclipse.jetty.server.Server;
  */
 
 public class Bootstrap {
+    private static final Logger LOG = LoggerFactory.getLogger(Bootstrap.class);
+
     private static ServerConfig serverConfig;
     private static ViewConfig viewConfig;
     private static MybatisConfig mybatisConfig;
@@ -43,37 +43,34 @@ public class Bootstrap {
     public static void run(String [] args) throws Exception {
         String basePackageName = PackageUtils.getBasePackageName();
         PackageUtils.scanPackage(basePackageName, true);
+        init();
 
         ServerConfig serverConfig = ConfigurationRegistry.getServerConfig();
 
-        Server server = new Server(serverConfig.getPort());
-        server.setHandler(new DispatcherServlet());
-
-        System.out.println(ConfigurationRegistry.getMap());
-
-        Bootstrap.init();
+        Server server = ServerFactory.getServer(serverConfig.getServerType());
 
         server.start();
-        server.join();
+
+        LOG.info("Server started successfully");
     }
 
     public static void run() throws Exception {
-        ServerConfig serverConfig = ConfigurationRegistry.getServerConfig();
-        Server server = new Server(8090);
-        server.setHandler(new DispatcherServlet());
         String basePackageName = PackageUtils.getBasePackageName();
         PackageUtils.scanPackage(basePackageName, true);
-        //PackageUtils.scanPackage(basePackageName, false);
+        init();
 
-        System.out.println(BeanInstanceRegistry.instanceMap);
+        ServerConfig serverConfig = ConfigurationRegistry.getServerConfig();
 
-        System.out.println(InjectionMappingRegistry.getBeanNameMap());
+        Server server = ServerFactory.getServer(serverConfig.getServerType());
 
         server.start();
-        server.join();
+
+        LOG.info("Server started successfully");
     }
 
     public static void main(String [] args) throws Exception {
-        run();
+        Package packa = Package.getPackage("com.anshishagua");
+
+        System.out.println(packa);
     }
 }

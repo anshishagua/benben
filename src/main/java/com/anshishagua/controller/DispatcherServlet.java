@@ -1,21 +1,22 @@
 package com.anshishagua.controller;
 
-import com.anshishagua.configuration.ApplicationProperties;
-import com.anshishagua.configuration.BeanInstanceRegistry;
-import com.anshishagua.configuration.ConfigurationRegistry;
-import com.anshishagua.constants.ContentType;
-import com.anshishagua.configuration.UrlMappingRegistry;
 import com.anshishagua.annotations.Autowired;
 import com.anshishagua.annotations.RequestParam;
 import com.anshishagua.annotations.Value;
+import com.anshishagua.configuration.ApplicationProperties;
+import com.anshishagua.configuration.BeanInstanceRegistry;
+import com.anshishagua.configuration.ConfigurationRegistry;
+import com.anshishagua.configuration.UrlMappingRegistry;
 import com.anshishagua.configuration.ViewConfig;
+import com.anshishagua.constants.ContentType;
 import com.anshishagua.object.ModelAndView;
-import com.anshishagua.render.FreemarkerRender;
+import com.anshishagua.render.FreemarkerViewRender;
+import com.anshishagua.render.ViewRender;
+import com.anshishagua.render.ViewRenderFactory;
 import com.anshishagua.utils.ResourceUtils;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,11 +27,11 @@ import java.lang.reflect.Parameter;
 
 /**
  * User: lixiao
- * Date: 2018/4/25
- * Time: 上午10:07
+ * Date: 2018/4/27
+ * Time: 下午4:13
  */
 
-public class DispatcherServlet extends AbstractHandler {
+public class DispatcherServlet extends HttpServlet {
     private void initController(Object object) throws Exception {
         Class<?> clazz = object.getClass();
 
@@ -49,7 +50,7 @@ public class DispatcherServlet extends AbstractHandler {
         }
     }
 
-    private void handleStaticResource(String path, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void handleStaticResource(String path, HttpServletResponse response) throws IOException {
         ViewConfig viewConfig = ConfigurationRegistry.getViewConfig();
 
         String fileExtension = path.substring(path.lastIndexOf("."));
@@ -75,9 +76,10 @@ public class DispatcherServlet extends AbstractHandler {
         response.getOutputStream().close();
     }
 
-    @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        Method method = UrlMappingRegistry.get(target);
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String target = request.getRequestURI();
+
+        System.out.println(target);
 
         ViewConfig viewConfig = ConfigurationRegistry.getViewConfig();
 
@@ -89,16 +91,17 @@ public class DispatcherServlet extends AbstractHandler {
             index = target.indexOf(viewConfig.getStaticResourcePath());
 
             target = target.substring(index);
-            handleStaticResource(target, request, response);
+            handleStaticResource(target, response);
 
             return;
         }
+
+        Method method = UrlMappingRegistry.get(target);
 
         if (method == null) {
             response.setContentType("text/html;charset=utf-8");
             response.setCharacterEncoding("utf-8");
             response.setStatus(HttpServletResponse.SC_OK);
-            baseRequest.setHandled(true);
             response.getWriter().println("404");
 
             return;
@@ -106,6 +109,7 @@ public class DispatcherServlet extends AbstractHandler {
 
         Class<?> controllerClazz = method.getDeclaringClass();
         Object controller = null;
+
 
         try {
             controller = controllerClazz.newInstance();
@@ -159,34 +163,14 @@ public class DispatcherServlet extends AbstractHandler {
 
             ModelAndView modelAndView = (ModelAndView) method.invoke(controller, parameters);
 
-            //VelocityRender render = new VelocityRender(request, response);
-            //ThymeleafRender render = new ThymeleafRender(request, response);
-            FreemarkerRender render = new FreemarkerRender(request, response);
+            ViewRender render = ViewRenderFactory.getViewRender(viewConfig.getViewRenderType());
+
             render.setModelAndView(modelAndView);
+            render.setRequest(request);
+            render.setResponse(response);
             render.render();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        /*
-        System.out.println(target);
-        response.setContentType("text/html;charset=utf-8");
-        response.setCharacterEncoding("utf-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-        baseRequest.setHandled(true);
-        PrintWriter out = response.getWriter();
-        if (target.equals("/favicon.ico")) {
-            System.out.println(1);
-            out.println("404");
-        }
-        else {
-            System.out.println(2);
-            out.println("hello jetty");
-            if(request.getParameter("name")!=null)
-            {
-                out.println(request.getParameter("name"));
-            }
-        }
-        */
     }
 }

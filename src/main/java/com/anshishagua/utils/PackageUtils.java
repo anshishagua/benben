@@ -36,16 +36,40 @@ import java.util.stream.Collectors;
  */
 
 public class PackageUtils {
+    public static String getBasePackageName(Class<?> clazz) {
+        String packageName = clazz.getPackage().getName();
+
+        List<String> list = Arrays.asList(packageName.split("\\."));
+
+        for (int i = 0; i < list.size(); ++i) {
+            String str = list.subList(0, i + 1).stream().collect(Collectors.joining("/"));
+
+            URL url = Thread.currentThread().getContextClassLoader().getResource(str);
+
+            File file = new File(url.getFile());
+
+            if (file.isDirectory() && file.listFiles().length > 0) {
+                return str;
+            }
+        }
+
+        return null;
+    }
+
     public static String getBasePackageName() {
         String packageName = PackageUtils.class.getPackage().getName();
 
         List<String> list = Arrays.asList(packageName.split("\\."));
 
         for (int i = 0; i < list.size(); ++i) {
-            String str = list.subList(0, i + 1).stream().collect(Collectors.joining("."));
+            String str = list.subList(0, i + 1).stream().collect(Collectors.joining("/"));
 
-            if (Package.getPackage(str) != null) {
-                return str;
+            URL url = Thread.currentThread().getContextClassLoader().getResource(str);
+
+            File file = new File(url.getFile());
+
+            if (file.isDirectory() && file.listFiles().length > 0) {
+                return str.replace("/", ".");
             }
         }
 
@@ -82,8 +106,6 @@ public class PackageUtils {
                 if (methodUrlPath.startsWith("/")) {
                     methodUrlPath = methodUrlPath.substring(1);
                 }
-
-                HttpMethod httpMethod = urlMapping.method();
 
                 String urlPath = baseUrlPath + methodUrlPath;
 
@@ -254,7 +276,6 @@ public class PackageUtils {
                 Class<?> clazz = Class.forName(str);
 
                 if (clazz.isAnnotationPresent(Controller.class) && firstScan) {
-                    System.out.println(clazz);
                     configController(clazz);
                 }
 
@@ -271,6 +292,11 @@ public class PackageUtils {
 
                     className = className.replace("/", ".");
 
+                    if (f.isDirectory()) {
+                        scanPackage(className, firstScan);
+                        continue;
+                    }
+
                     if (className.endsWith(".class")) {
                         className = className.substring(0, className.lastIndexOf(".class"));
                     }
@@ -278,7 +304,6 @@ public class PackageUtils {
                     Class<?> clazz = Class.forName(className);
 
                     if (clazz.isAnnotationPresent(Controller.class) && firstScan) {
-                        System.out.println(clazz);
                         configController(clazz);
                     }
 
@@ -288,11 +313,5 @@ public class PackageUtils {
                 }
             }
         }
-    }
-
-    public static void main(String [] args) throws Exception {
-        Package packag = Package.getPackage("com.anshishagua.utils");
-
-        System.out.println(getBasePackageName());
     }
 }

@@ -2,6 +2,7 @@ package com.anshishagua.configuration;
 
 import com.anshishagua.annotations.Configuration;
 import com.anshishagua.annotations.Value;
+import com.anshishagua.render.ViewRenderType;
 
 import java.util.Objects;
 import java.util.Set;
@@ -29,6 +30,9 @@ public class ViewConfig {
     @Value(property = "staticResource.types")
     private Set<String> staticResourceTypes;
 
+    @Value(property = "render.type")
+    private ViewRenderType viewRenderType;
+
     public String getPathPrefix() {
         return pathPrefix;
     }
@@ -47,6 +51,10 @@ public class ViewConfig {
 
     public Set<String> getStaticResourceTypes() {
         return staticResourceTypes;
+    }
+
+    public ViewRenderType getViewRenderType() {
+        return viewRenderType;
     }
 
     public boolean isStaticResource(String type) {

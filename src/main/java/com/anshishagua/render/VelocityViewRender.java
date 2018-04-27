@@ -23,23 +23,24 @@ import java.util.Objects;
  * Time: 上午11:22
  */
 
-public class VelocityRender extends AbstractRender {
+public class VelocityViewRender extends AbstractViewRender {
     private final VelocityEngine engine = new VelocityEngine();
 
     private ModelAndView modelAndView;
 
     private ViewConfig viewConfig = ConfigurationRegistry.getViewConfig();
 
-    public VelocityRender(HttpServletRequest request, HttpServletResponse response) {
+    public VelocityViewRender(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
 
         init();
     }
 
-    public VelocityRender() {
+    public VelocityViewRender() {
         init();
     }
 
+    @Override
     public void init() {
         engine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         engine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
@@ -53,6 +54,7 @@ public class VelocityRender extends AbstractRender {
         this.modelAndView = modelAndView;
     }
 
+    @Override
     public void render() {
         render(modelAndView);
     }
@@ -90,7 +92,7 @@ public class VelocityRender extends AbstractRender {
         modelAndView.setViewName("hello");
         modelAndView.addObject("name", "benben");
 
-        VelocityRender render = new VelocityRender();
+        VelocityViewRender render = new VelocityViewRender();
         render.setModelAndView(modelAndView);
         render.render();
     }

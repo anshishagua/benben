@@ -22,23 +22,26 @@ import java.util.Objects;
  * Time: 下午2:15
  */
 
-public class ThymeleafRender extends AbstractRender {
-    private static final Logger LOG = LoggerFactory.getLogger(ThymeleafRender.class);
+public class ThymeleafViewRender extends AbstractViewRender {
+    private static final Logger LOG = LoggerFactory.getLogger(ThymeleafViewRender.class);
 
     public static final String DEFAULT_FILE_SUFFIX = ".html";
 
     private final TemplateEngine templateEngine = new TemplateEngine();
 
-    private ModelAndView modelAndView;
-
     private ViewConfig viewConfig = ConfigurationRegistry.getViewConfig();
 
-    public ThymeleafRender(HttpServletRequest request, HttpServletResponse response) {
+    public ThymeleafViewRender() {
+        super();
+    }
+
+    public ThymeleafViewRender(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
 
         init();
     }
 
+    @Override
     public void init() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
 
@@ -64,6 +67,7 @@ public class ThymeleafRender extends AbstractRender {
         this.modelAndView = modelAndView;
     }
 
+    @Override
     public void render() {
         Context context = new Context();
 
@@ -74,6 +78,9 @@ public class ThymeleafRender extends AbstractRender {
         context.setVariable("helloword","hello thymeleaf,wellcome!");
 
         try {
+            response.setContentType("text/html;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+
             templateEngine.process(modelAndView.getViewName(), context, response.getWriter());
         } catch (IOException ex) {
             LOG.error("Failed to render", ex);

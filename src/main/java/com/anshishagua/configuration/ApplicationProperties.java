@@ -5,6 +5,7 @@ import com.anshishagua.object.Converter;
 import com.anshishagua.examples.Person;
 import com.anshishagua.utils.PropertyUtils;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -283,6 +284,29 @@ public class ApplicationProperties {
             }
 
             return map;
+        } else if (type.isEnum()) {
+            String value = properties.getProperty(propertyName);
+
+            if (value == null || value.equals("")) {
+                return null;
+            }
+
+            try {
+                Method method = type.getMethod("values");
+                method.setAccessible(true);
+
+                Object [] values = (Object []) method.invoke(type, null);
+
+                for (Object object : values) {
+                    if (value.equalsIgnoreCase(object.toString())) {
+                        return object;
+                    }
+                }
+
+                return null;
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         } else {
             String value = properties.getProperty(propertyName);
 

@@ -24,30 +24,33 @@ import java.util.Objects;
  * Time: 下午4:40
  */
 
-public class FreemarkerRender extends AbstractRender {
-    private static final Logger LOG = LoggerFactory.getLogger(ThymeleafRender.class);
+public class FreemarkerViewRender extends AbstractViewRender {
+    private static final Logger LOG = LoggerFactory.getLogger(ThymeleafViewRender.class);
 
     public static final String DEFAULT_FILE_SUFFIX = ".html";
 
     private final TemplateEngine templateEngine = new TemplateEngine();
 
-    private ModelAndView modelAndView;
-
     private Configuration configuration;
 
     private ViewConfig viewConfig = ConfigurationRegistry.getViewConfig();
 
-    public FreemarkerRender(HttpServletRequest request, HttpServletResponse response) {
+    public FreemarkerViewRender() {
+
+    }
+
+    public FreemarkerViewRender(HttpServletRequest request, HttpServletResponse response) {
         super(request, response);
 
         init();
     }
 
+    @Override
     public void init() {
         configuration = new Configuration(Configuration.VERSION_2_3_28);
 
         try {
-            configuration.setDirectoryForTemplateLoading(new File(FreemarkerRender.class.getClassLoader().getResource(viewConfig.getPathPrefix()).getFile()));
+            configuration.setDirectoryForTemplateLoading(new File(FreemarkerViewRender.class.getClassLoader().getResource(viewConfig.getPathPrefix()).getFile()));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -67,6 +70,7 @@ public class FreemarkerRender extends AbstractRender {
         this.modelAndView = modelAndView;
     }
 
+    @Override
     public void render() {
         String suffix = viewConfig.getSuffix();
         String view = modelAndView.getViewName() + suffix;
@@ -74,6 +78,8 @@ public class FreemarkerRender extends AbstractRender {
         try {
             Template template = configuration.getTemplate(view);
 
+            response.setContentType("text/html;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
             response.setHeader("Cache-control", "no-cache");
             template.process(modelAndView.getObjectMap(), response.getWriter());
         } catch (IOException | TemplateException ex) {
